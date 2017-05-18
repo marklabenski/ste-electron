@@ -26,6 +26,25 @@ function createWindow() {
 
 app.on('ready', createWindow);
 
+ipcMain.on('file-open-dialog', (event) => {
+  dialog.showOpenDialog({
+    properties: ['openFile'],
+  }, (filePaths) => {
+    fs.readFile(filePaths[0], 'utf8', (err, data) => {
+      if (err) throw err;
+      const file = { content: data, path: filePaths[0] };
+      event.sender.send('file-dialog-opened', file);
+    });
+  });
+});
+
+ipcMain.on('save-file', (event, file) => {
+  fs.writeFile(file.path, file.content, 'utf8', (err) => {
+    if (err) throw err;
+    event.sender.send('file-saved', file.path);
+  });
+});
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
