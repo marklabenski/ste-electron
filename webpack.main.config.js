@@ -2,12 +2,14 @@
 
 process.env.BABEL_ENV = 'main'
 
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path')
 const pkg = require('./app/package.json')
 const settings = require('./config.js')
 const webpack = require('webpack')
 
 let mainConfig = {
+  context: path.join(__dirname, 'app'),
   entry: {
     main: path.join(__dirname, 'app/src/main/index.js')
   },
@@ -26,7 +28,17 @@ let mainConfig = {
       {
         test: /\.node$/,
         loader: 'node-loader'
-      }
+      },
+      {
+        test: /\.(jar)(\?.*)?$/,
+        use: {
+          loader: 'url-loader',
+          query: {
+            limit: 10000,
+            name: 'java/[name].[ext]'
+          }
+        }
+      },
     ]
   },
   node: {
@@ -47,7 +59,10 @@ let mainConfig = {
       compress: {
         warnings: false
       }
-    })
+    }),
+    new CopyWebpackPlugin([
+        { from: 'app/java/ste-0.1-jar-with-dependencies.jar', to: 'app/dist' }
+    ]),
   ],
   resolve: {
     extensions: ['.js', '.json', '.node'],
