@@ -1,9 +1,36 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import fs from 'fs';
+/* eslint-disable */
+import { spawn } from 'child_process';
+
+// const bat = spawn('pwd');
+const bat = spawn('java', [ '-jar', 'app/java/ste-0.1-jar-with-dependencies.jar' ]);
+
+bat.stdout.on('data', (data) => {
+  console.log('stdout', data.toString());
+});
+
+bat.stderr.on('data', (data) => {
+  console.log('stderr', data.toString());
+});
+
+bat.on('message', (m, socket) => {
+  console.log('message', m);
+});
+
+bat.on('error', (err) => {
+  console.log('err', err);
+});
+bat.on('exit', (code) => {
+  console.log(`Child exited with code ${code}`);
+});
+/* eslint-enable */
 
 let mainWindow;
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:${require('../../../config').port}`
   : `file://${__dirname}/index.html`;
+
 
 function createWindow() {
   /**
