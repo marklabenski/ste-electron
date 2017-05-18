@@ -23,7 +23,7 @@
   body { height: 100%; }
 
   body {
-    align-items: center;
+    align-items: left;
     background:
       radial-gradient(
         ellipse at center,
