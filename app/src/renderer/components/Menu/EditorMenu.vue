@@ -3,6 +3,8 @@
     {{ $currentFile }}
     <button class="open-file" v-on:click="openFile($store)">Open</button>
     <button class="save-file" v-on:click="saveFile($store)">Save</button>
+    <button class="encrypt-file" v-on:click="encryptFile($store)">Encrypt</button>
+    <button class="decrypt-file" v-on:click="decryptFile($store)">Decrypt</button>
   </nav>
 </template>
 
@@ -25,6 +27,25 @@
         fileService.saveFile(store.state.currentFile).then((file) => {
           store.dispatch('unsetFileIsSaving');
           console.log('yay ', file, store);
+        });
+      },
+      encryptFile: (store) => {
+        store.dispatch('setFileIsSaving');
+        const savedPath = store.state.currentFile.path;
+        fileService.encryptFile(store.state.currentFile).then((encryptedFileContent) => {
+          store.dispatch('unsetFileIsSaving');
+          store.dispatch('setCurrentFile', { content: encryptedFileContent.secret, path: savedPath });
+        });
+      },
+      decryptFile: (store) => {
+        store.dispatch('setFileIsSaving');
+        const savedPath = store.state.currentFile.path;
+        fileService.decryptFile(store.state.currentFile).then((decryptedFileContent) => {
+          store.dispatch('unsetFileIsSaving');
+          store.dispatch('setCurrentFile', {
+            content: decryptedFileContent.fileContent,
+            path: savedPath,
+          });
         });
       },
     },

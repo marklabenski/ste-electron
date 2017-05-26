@@ -2,27 +2,61 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'fs';
 /* eslint-disable */
 import { spawn } from 'child_process';
+import socketIO from 'socket.io';
+import { inspect } from 'util';
 
-// const bat = spawn('pwd');
-const bat = spawn('java', [ '-jar', 'app/java/ste-0.1-jar-with-dependencies.jar' ]);
+const javaProcess = spawn('java', [ '-jar', 'app/java/ste-0.1-jar-with-dependencies.jar' ]);
 
-bat.stdout.on('data', (data) => {
-  console.log('stdout', data.toString());
-});
-
-bat.stderr.on('data', (data) => {
-  console.log('stderr', data.toString());
-});
-
-bat.on('message', (m, socket) => {
+javaProcess.on('message', (m, socket) => {
   console.log('message', m);
 });
-
-bat.on('error', (err) => {
+javaProcess.stdout.on('data', (data) => {
+  console.log('data', data.toString());
+});
+javaProcess.on('stdout', (err) => {
+  console.log('stdout', err);
+});
+javaProcess.on('stderr', (err) => {
   console.log('err', err);
 });
-bat.on('exit', (code) => {
+javaProcess.on('error', (err) => {
+  console.log('err', err);
+});
+javaProcess.on('exit', (code) => {
   console.log(`Child exited with code ${code}`);
+});
+
+const io = new socketIO(41414);
+let connectedJavaSocket = null;
+
+io.on('connection', function(socket){
+  connectedJavaSocket = socket;
+  // socket.on('file.encrypted', function(obj){
+  //   console.log('file encrypted', inspect(obj));
+  //
+  //   socket.emit('file.decrypt', {
+  //     "encryptionSettings": {
+  //       "fileName": "test.txt",
+  //       "cipherSuite": "DES/ECB/ZeroBytePadding",
+  //       "key": "12345678",
+  //       "keySuite": "DES"
+  //     }, "secret": obj.secret});
+  // });
+  //
+  // socket.on('file.decrypted', function(obj) {
+  //   console.log('file decrypted', inspect(obj));
+  // });
+  //
+  // console.log('socket connection to java proces established');
+  //
+  // socket.emit('file.encrypt', {
+  //   "encryptionSettings": {
+  //     "fileName": "test.txt",
+  //     "cipherSuite": "DES/ECB/ZeroBytePadding",
+  //     "key": "12345678",
+  //     "keySuite": "DES"
+  //    }, "fileContent": "hallo"});
+  // socket.emit('file.encrypt', { encryptionSettings: "hallo", fileContent: 'jhasdjh'});
 });
 /* eslint-enable */
 
@@ -69,6 +103,34 @@ ipcMain.on('save-file', (event, file) => {
   fs.writeFile(file.path, file.content, 'utf8', (err) => {
     if (err) throw err;
     event.sender.send('file-saved', file.path);
+  });
+});
+
+ipcMain.on('encrypt-file', (event, file) => {
+  const fileContent = file.content;
+  connectedJavaSocket.emit('file.encrypt', {
+    encryptionSettings: {
+      fileName: 'test.txt',
+      cipherSuite: 'DES/ECB/ZeroBytePadding',
+      key: '12345678',
+      keySuite: 'DES',
+    }, fileContent });
+  connectedJavaSocket.on('file.encrypted', (obj) => {
+    event.sender.send('file-encrypted', obj);
+  });
+});
+
+ipcMain.on('decrypt-file', (event, file) => {
+  const secret = file.content;
+  connectedJavaSocket.emit('file.decrypt', {
+    encryptionSettings: {
+      fileName: 'test.txt',
+      cipherSuite: 'DES/ECB/ZeroBytePadding',
+      key: '12345678',
+      keySuite: 'DES',
+    }, secret });
+  connectedJavaSocket.on('file.decrypted', (obj) => {
+    event.sender.send('file-decrypted', obj);
   });
 });
 

@@ -11,6 +11,26 @@ export default {
       });
     });
   },
+  encryptFile: (file) => {
+    console.log(file);
+    return new Promise((resolve) => {
+      ipcRenderer.send('encrypt-file', file);
+      ipcRenderer.on('file-encrypted', (event, obj) => {
+        resolve(obj);
+        console.log(event, obj);
+      });
+    });
+  },
+  decryptFile: (file) => {
+    console.log(file);
+    return new Promise((resolve) => {
+      ipcRenderer.send('decrypt-file', file);
+      ipcRenderer.on('file-decrypted', (event, obj) => {
+        resolve(obj);
+        console.log(event, obj);
+      });
+    });
+  },
   fileDialog: {
     open: () => {
       console.log('send stuff');
