@@ -7,11 +7,16 @@ export default new Vuex.Store({
   state: {
     currentFile: { content: '', path: '' },
     isFileSaving: false,
+    showEncryptionModal: false,
   },
   mutations: {
     setCurrentFile(state, newFile) {
       // mutate state
       state.currentFile = newFile;
+    },
+    setShowEncryptionModal(state, show) {
+      // mutate state
+      state.showEncryptionModal = show;
     },
     setFileIsSaving(state, isSaving) {
       state.isFileSaving = isSaving;
@@ -22,6 +27,9 @@ export default new Vuex.Store({
     },
   },
   actions: {
+    setShowEncryptionModal({ commit }, show) {
+      commit('setShowEncryptionModal', show);
+    },
     setCurrentFile({ commit }, newFile) {
       commit('setCurrentFile', newFile);
     },

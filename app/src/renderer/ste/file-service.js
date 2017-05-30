@@ -11,10 +11,10 @@ export default {
       });
     });
   },
-  encryptFile: (file) => {
+  encryptFile: (file, encryptionSettings) => {
     console.log(file);
     return new Promise((resolve) => {
-      ipcRenderer.send('encrypt-file', file);
+      ipcRenderer.send('encrypt-file', { file, encryptionSettings });
       ipcRenderer.on('file-encrypted', (event, obj) => {
         resolve(obj);
         console.log(event, obj);

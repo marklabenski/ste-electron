@@ -106,19 +106,18 @@ ipcMain.on('save-file', (event, file) => {
   });
 });
 
-ipcMain.on('encrypt-file', (event, file) => {
+ipcMain.on('encrypt-file', (event, { file, encryptionSettings }) => {
   const fileContent = file.content;
+
   connectedJavaSocket.emit('file.encrypt', {
-    encryptionSettings: {
-      fileName: 'test.txt',
-      cipherSuite: 'DES/ECB/ZeroBytePadding',
-      key: '12345678',
-      keySuite: 'DES',
-    }, fileContent });
+    encryptionSettings,
+    fileContent,
+  });
   connectedJavaSocket.on('file.encrypted', (obj) => {
     event.sender.send('file-encrypted', obj);
   });
 });
+
 
 ipcMain.on('decrypt-file', (event, file) => {
   const secret = file.content;
