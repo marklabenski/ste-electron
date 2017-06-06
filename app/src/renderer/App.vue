@@ -6,8 +6,10 @@
 
 <script>
   import store from './vuex/store.js';
+  import fileService from './ste/file-service';
   export default {
     store,
+    fileService,
   };
 </script>
 

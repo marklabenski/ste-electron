@@ -1,6 +1,6 @@
 import { ipcRenderer } from 'electron';
 
-export default {
+const fileService = {
   saveFile: (file) => {
     console.log(file);
     return new Promise((resolve) => {
@@ -42,5 +42,10 @@ export default {
         });
       });
     },
+  },
+};
+export default {
+  install(Vue) {
+    Vue.prototype.$fileService = fileService;
   },
 };
