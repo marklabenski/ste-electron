@@ -3,3 +3,6 @@ app/dist/**
 test/unit/coverage/**
 test/unit/*.js
 test/e2e/*.js
+config.js
+webpack.main.config.js
+webpack.renderer.config.js
