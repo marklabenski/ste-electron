@@ -3,6 +3,7 @@
     <editor-menu></editor-menu>
     <file-content></file-content>
     <encryption-settings></encryption-settings>
+    <decryption-settings></decryption-settings>
   </div>
 </template>
 
@@ -10,11 +11,13 @@
   import FileContent from './Editor/FileContent';
   import EditorMenu from './Menu/EditorMenu';
   import EncryptionSettings from './Modals/EncryptionSettings';
+  import DecryptionSettings from './Modals/DecryptionSettings';
   export default {
     components: {
       EditorMenu,
       FileContent,
       EncryptionSettings,
+      DecryptionSettings,
     },
     name: 'editor',
   };

@@ -5,9 +5,9 @@ const fileService = {
     console.log(file);
     return new Promise((resolve) => {
       ipcRenderer.send('save-file', file);
-      ipcRenderer.on('file-saved', (event, filePath) => {
+
+      ipcRenderer.once('file-saved', (event, filePath) => {
         resolve(filePath);
-        console.log(event, file);
       });
     });
   },
@@ -15,7 +15,7 @@ const fileService = {
     console.log(file);
     return new Promise((resolve) => {
       ipcRenderer.send('encrypt-file', { file, encryptionSettings });
-      ipcRenderer.on('file-encrypted', (event, obj) => {
+      ipcRenderer.once('file-encrypted', (event, obj) => {
         resolve(obj);
         console.log(event, obj);
       });
@@ -23,10 +23,15 @@ const fileService = {
   },
   decryptFile: (file) => {
     console.log(file);
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       ipcRenderer.send('decrypt-file', file);
-      ipcRenderer.on('file-decrypted', (event, obj) => {
-        resolve(obj);
+      ipcRenderer.once('file-decrypted', (event, obj) => {
+        file.content = obj.fileContent;
+        resolve(file);
+        console.log(event, obj);
+      });
+      ipcRenderer.once('wrong-key', (event, obj) => {
+        reject();
         console.log(event, obj);
       });
     });
@@ -34,11 +39,22 @@ const fileService = {
   fileDialog: {
     open: () => {
       console.log('send stuff');
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         ipcRenderer.send('file-open-dialog');
-        ipcRenderer.on('file-dialog-opened', (event, file) => {
+        ipcRenderer.once('file-dialog-canceled', () => {
+          reject('canceled');
+          ipcRenderer.removeAllListeners('file-opened');
+          ipcRenderer.removeAllListeners('encrypted-file-opened');
+        });
+        ipcRenderer.once('file-opened', (event, file) => {
           resolve(file);
-          console.log(event, file);
+          ipcRenderer.removeAllListeners('file-dialog-canceled');
+          ipcRenderer.removeAllListeners('encrypted-file-opened');
+        });
+        ipcRenderer.once('encrypted-file-opened', (event, file) => {
+          resolve(file);
+          ipcRenderer.removeAllListeners('file-dialog-canceled');
+          ipcRenderer.removeAllListeners('file-opened');
         });
       });
     },

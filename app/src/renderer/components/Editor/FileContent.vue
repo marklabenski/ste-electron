@@ -1,31 +1,38 @@
 <template>
-  <textarea v-on:keyup="test" v-bind:class="{ disabled: isFileSaving }" v-bind:disabled="fileSaving">
-    {{ fileContent }}
-  </textarea>
+  <textarea
+    v-bind:class="{ disabled: isTextAreaDisabled }"
+    v-bind:disabled="isTextAreaDisabled"
+    v-model="fileContent"></textarea>
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
+
   export default {
-    data() {
-      return {
-        fileSaving: false,
-      };
-    },
     methods: {
-      test() {
+      changeFileContent() {
         /* eslint-disable */
-        console.log('hep');
         this.$store.dispatch('changeFileContent', this.$el.value);
         /* eslint-enable */
       },
     },
     computed: {
-      fileContent() {
-        return this.$store.state.currentFile.content;
+      isTextAreaDisabled() {
+        return (this.isFileSaving || this.isFileEncrypted)
+          && this.$store.state.currentFile.type !== 'new';
       },
-      isFileSaving() {
-        return this.$store.state.isFileSaving;
+      fileContent: {
+        get() {
+          return this.$store.state.currentFile.content;
+        },
+        set(value) {
+          this.$store.commit('changeFileContent', value);
+        },
       },
+      ...mapGetters([
+        'isFileSaving',
+        'isFileEncrypted',
+      ]),
     },
   };
 </script>
@@ -33,6 +40,7 @@
 <style scoped>
   textarea {
     background: none;
+    z-index: 10;
     border: none;
     width: 100vw;
     height: 100vh;
