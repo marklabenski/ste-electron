@@ -31,32 +31,6 @@ let connectedJavaSocket = null;
 
 io.on('connection', function(socket){
   connectedJavaSocket = socket;
-  // socket.on('file.encrypted', function(obj){
-  //   console.log('file encrypted', inspect(obj));
-  //
-  //   socket.emit('file.decrypt', {
-  //     "encryptionSettings": {
-  //       "fileName": "test.txt",
-  //       "cipherSuite": "DES/ECB/ZeroBytePadding",
-  //       "key": "12345678",
-  //       "keySuite": "DES"
-  //     }, "secret": obj.secret});
-  // });
-  //
-  // socket.on('file.decrypted', function(obj) {
-  //   console.log('file decrypted', inspect(obj));
-  // });
-  //
-  // console.log('socket connection to java proces established');
-  //
-  // socket.emit('file.encrypt', {
-  //   "encryptionSettings": {
-  //     "fileName": "test.txt",
-  //     "cipherSuite": "DES/ECB/ZeroBytePadding",
-  //     "key": "12345678",
-  //     "keySuite": "DES"
-  //    }, "fileContent": "hallo"});
-  // socket.emit('file.encrypt', { encryptionSettings: "hallo", fileContent: 'jhasdjh'});
 });
 /* eslint-enable */
 
@@ -91,16 +65,40 @@ ipcMain.on('file-open-dialog', (event) => {
   dialog.showOpenDialog({
     properties: ['openFile'],
   }, (filePaths) => {
+    if (!filePaths) {
+      event.sender.send('file-dialog-canceled');
+      return;
+    }
     fs.readFile(filePaths[0], 'utf8', (err, data) => {
       if (err) throw err;
-      const file = { content: data, path: filePaths[0] };
-      event.sender.send('file-dialog-opened', file);
+      let fileTransferObj = { content: data, path: filePaths[0] };
+      if (data[0] === '{' && /encrypted/g.test(data)) {
+        fileTransferObj = JSON.parse(data);
+      }
+
+      event.sender.send('encrypted-file-opened', fileTransferObj);
+    });
+  });
+});
+
+ipcMain.on('save-file-dialog', (event) => {
+  dialog.showOpenDialog({
+    // 'defaultPath': event.,
+  }, (filename) => {
+    fs.writeFile(filename, event.fileContent, (err) => {
+      if (err) throw err;
+      event.sender.send('file-saved', event.fileContent);
     });
   });
 });
 
 ipcMain.on('save-file', (event, file) => {
-  fs.writeFile(file.path, file.content, 'utf8', (err) => {
+  let fileToSave = file.content;
+  if (file.type === 'encrypted') {
+    fileToSave = JSON.stringify(file);
+  }
+
+  fs.writeFile(file.path, fileToSave, 'utf8', (err) => {
     if (err) throw err;
     event.sender.send('file-saved', file.path);
   });
@@ -122,14 +120,14 @@ ipcMain.on('encrypt-file', (event, { file, encryptionSettings }) => {
 ipcMain.on('decrypt-file', (event, file) => {
   const secret = file.content;
   connectedJavaSocket.emit('file.decrypt', {
-    encryptionSettings: {
-      fileName: 'test.txt',
-      cipherSuite: 'DES/ECB/ZeroBytePadding',
-      key: '12345678',
-      keySuite: 'DES',
-    }, secret });
+    encryptionSettings: file.encryptionSettings,
+    secret,
+  });
   connectedJavaSocket.on('file.decrypted', (obj) => {
     event.sender.send('file-decrypted', obj);
+  });
+  connectedJavaSocket.on('wrong-key', (obj) => {
+    event.sender.send('wrong-key', obj);
   });
 });
 
