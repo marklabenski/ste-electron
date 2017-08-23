@@ -61,7 +61,7 @@ let mainConfig = {
       }
     }),
     new CopyWebpackPlugin([
-        { from: 'app/java/ste-0.1-jar-with-dependencies.jar', to: 'app/dist' }
+        { from: 'java/ste-0.1-jar-with-dependencies.jar', to: 'app/dist' }
     ]),
   ],
   resolve: {

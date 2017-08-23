@@ -6,7 +6,8 @@ import socketIO from 'socket.io';
 import { inspect } from 'util';
 
 if (process.env.NODE_ENV !== 'development') {
-  const javaProcess = spawn('java', [ '-jar', 'app/java/ste-0.1-jar-with-dependencies.jar' ]);
+  const jarPath = 'asar:' + __dirname + './app/java/ste-0.1-jar-with-dependencies.jar';
+  const javaProcess = spawn('java', [ '-jar', jarPath ]);
 
   javaProcess.on('message', (m, socket) => {
     console.log('message', m);
