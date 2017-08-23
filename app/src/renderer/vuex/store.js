@@ -11,6 +11,7 @@ export default new Vuex.Store({
     isFileSaving: false,
     showEncryptionModal: false,
     showDecryptionModal: false,
+    showKeyGenerateModal: false,
     isFileDirty: false,
   },
   mutations: {
@@ -26,6 +27,10 @@ export default new Vuex.Store({
     setShowDecryptionModal(state, show) {
       // mutate state
       state.showDecryptionModal = show;
+    },
+    setShowKeyGenerateModal(state, show) {
+      // mutate state
+      state.showKeyGenerateModal = show;
     },
     setFileIsSaving(state, isSaving) {
       state.isFileSaving = isSaving;
@@ -59,6 +64,9 @@ export default new Vuex.Store({
     setShowDecryptionModal({ commit }, show) {
       commit('setShowDecryptionModal', show);
     },
+    setShowKeyGenerateModal({ commit }, show) {
+      commit('setShowKeyGenerateModal', show);
+    },
     setCurrentFile({ commit }, newFile) {
       commit('setCurrentFile', newFile);
     },
@@ -75,5 +83,7 @@ export default new Vuex.Store({
       commit('changeFileContent', newFileContent);
     },
   },
+
+
   strict: process.env.NODE_ENV !== 'production',
 });

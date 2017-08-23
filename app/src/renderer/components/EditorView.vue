@@ -4,6 +4,7 @@
     <file-content></file-content>
     <encryption-settings></encryption-settings>
     <decryption-settings></decryption-settings>
+    <key-generate-modal></key-generate-modal>
   </div>
 </template>
 
@@ -12,12 +13,15 @@
   import EditorMenu from './Menu/EditorMenu';
   import EncryptionSettings from './Modals/EncryptionSettings';
   import DecryptionSettings from './Modals/DecryptionSettings';
+  import KeyGenerateModal from './Modals/KeyGenerateModal';
+
   export default {
     components: {
       EditorMenu,
       FileContent,
       EncryptionSettings,
       DecryptionSettings,
+      KeyGenerateModal,
     },
     name: 'editor',
   };

@@ -46,11 +46,12 @@
     height: 100vh;
     -webkit-appearance: none;
     display: block;
-    padding-top: 40px;
     align-items: left;
     text-align: left;
     font-family: monospace;
+    font-size: 14px;
     color: #000;
+    padding: 46px 6px 6px 6px;
   }
 
   textarea.disabled {

@@ -5,32 +5,36 @@ import { spawn } from 'child_process';
 import socketIO from 'socket.io';
 import { inspect } from 'util';
 
-const javaProcess = spawn('java', [ '-jar', 'app/java/ste-0.1-jar-with-dependencies.jar' ]);
+if (process.env.NODE_ENV !== 'development') {
+  const javaProcess = spawn('java', [ '-jar', 'app/java/ste-0.1-jar-with-dependencies.jar' ]);
 
-javaProcess.on('message', (m, socket) => {
-  console.log('message', m);
-});
-javaProcess.stdout.on('data', (data) => {
-  console.log('data', data.toString());
-});
-javaProcess.on('stdout', (err) => {
-  console.log('stdout', err);
-});
-javaProcess.on('stderr', (err) => {
-  console.log('err', err);
-});
-javaProcess.on('error', (err) => {
-  console.log('err', err);
-});
-javaProcess.on('exit', (code) => {
-  console.log(`Child exited with code ${code}`);
-});
+  javaProcess.on('message', (m, socket) => {
+    console.log('message', m);
+  });
+  javaProcess.stdout.on('data', (data) => {
+    console.log('data', data.toString());
+  });
+  javaProcess.on('stdout', (err) => {
+    console.log('stdout', err);
+  });
+  javaProcess.on('stderr', (err) => {
+    console.log('err', err);
+  });
+  javaProcess.on('error', (err) => {
+    console.log('err', err);
+  });
+  javaProcess.on('exit', (code) => {
+    console.log(`Child exited with code ${code}`);
+  });
+}
 
 const io = new socketIO(41414);
 let connectedJavaSocket = null;
 
 io.on('connection', function(socket){
   connectedJavaSocket = socket;
+  connectedJavaSocket.emit('info.list-algorithms', {});
+
 });
 /* eslint-enable */
 
@@ -104,30 +108,70 @@ ipcMain.on('save-file', (event, file) => {
   });
 });
 
-ipcMain.on('encrypt-file', (event, { file, encryptionSettings }) => {
-  const fileContent = file.content;
-
-  connectedJavaSocket.emit('file.encrypt', {
-    encryptionSettings,
-    fileContent,
-  });
-  connectedJavaSocket.on('file.encrypted', (obj) => {
-    event.sender.send('file-encrypted', obj);
+ipcMain.on('open-key-file', (event, filePath) => {
+  const readKeyFileData = function openKeyFile(keyFilePath) {
+    fs.readFile(keyFilePath, 'utf8', (err, data) => {
+      if (err) throw err;
+      let keyFileData = '';
+      if (data[0] === '{') {
+        keyFileData = JSON.parse(data);
+      } else {
+        throw err;
+      }
+      event.sender.send('key-file-opened', keyFileData);
+    });
+  };
+  fs.access(filePath, fs.constants.R_OK | fs.constants.W_OK, (err) => {
+    if (err) {
+      dialog.showOpenDialog({
+        properties: ['openFile'],
+      }, (filePaths) => {
+        if (!filePaths) {
+          event.sender.send('key-file-not-selected');
+          return;
+        }
+        readKeyFileData(filePaths[0]);
+      });
+    } else {
+      readKeyFileData(filePath);
+    }
   });
 });
 
+ipcMain.on('save-file-and-key-file', (event, files) => {
+  const fileToSave = JSON.stringify(files.file);
+  const keyFileToSave = JSON.stringify(files.keyFile);
+  const keyFilePath = `${files.file.path}.key`;
 
-ipcMain.on('decrypt-file', (event, file) => {
-  const secret = file.content;
-  connectedJavaSocket.emit('file.decrypt', {
-    encryptionSettings: file.encryptionSettings,
-    secret,
+  fs.writeFile(files.file.path, fileToSave, 'utf8', (err) => {
+    if (err) throw err;
+
+    fs.writeFile(keyFilePath, keyFileToSave, 'utf8', (err) => {
+      if (err) throw err;
+      event.sender.send('file-and-key-file-saved', {
+        filePath: files.file.path,
+        keyFilePath,
+      });
+    });
   });
-  connectedJavaSocket.on('file.decrypted', (obj) => {
-    event.sender.send('file-decrypted', obj);
+});
+
+ipcMain.on('crypt.exec-algorithm', (event, encryptionSettings) => {
+  // const fileContent = file.content;
+
+  console.log(encryptionSettings);
+
+  connectedJavaSocket.emit('crypt.exec-algorithm', encryptionSettings);
+  connectedJavaSocket.once('crypt.exec-algorithm', (obj) => {
+    event.sender.send('crypt.exec-algorithm', obj);
   });
-  connectedJavaSocket.on('wrong-key', (obj) => {
-    event.sender.send('wrong-key', obj);
+});
+
+ipcMain.on('info.list-algorithms', (event) => {
+  connectedJavaSocket.emit('info.list-algorithms', {});
+  connectedJavaSocket.on('info.list-algorithms', (obj) => {
+    console.log(obj);
+    event.sender.send('info.list-algorithms', obj);
   });
 });
 

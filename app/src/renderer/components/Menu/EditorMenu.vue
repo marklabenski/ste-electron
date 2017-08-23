@@ -5,6 +5,7 @@
     <button class="save-file" v-on:click="saveFile">Save</button>
     <button class="encrypt-file" v-bind:disabled="isFileEmpty || isFileEncrypted" v-on:click="encryptFile">Encrypt</button>
     <button class="decrypt-file" v-bind:disabled="!isFileEncrypted" v-on:click="decryptFile">Decrypt</button>
+    <button class="generate-keypair" v-on:click="generateKeys">generate RSA keypair</button>
   </nav>
 </template>
 
@@ -54,18 +55,34 @@
       encryptFile() {
         this.$store.dispatch('setShowEncryptionModal', true);
       },
+      generateKeys() {
+        this.$store.dispatch('setShowKeyGenerateModal', true);
+      },
       decryptFile() {
-        this.$store.dispatch('setShowDecryptionModal', true);
-        // const savedPath = this.$store.state.currentFile.path;
-        // this.$fileService.decryptFile(this.$store.state.currentFile)
-        // .then((decryptedFileContent) => {
-        //   this.$store.dispatch('unsetFileIsSaving');
-        //   this.$store.dispatch('setCurrentFile', {
-        //     content: decryptedFileContent.fileContent,
-        //     path: savedPath,
-        //     type: 'plain',
-        //   });
-        // });
+        const currFile = this.$store.state.currentFile;
+
+        const isCipherSuiteDESOrAES = (cipherSuite) => {
+          const isAlgorithmDESOrAES = /^AES|^DES/g.test(cipherSuite);
+          return isAlgorithmDESOrAES;
+        };
+
+        if (isCipherSuiteDESOrAES(currFile.encryptionSettings.cipherSuite)) {
+          const savedPath = this.$store.state.currentFile.path;
+          this.$fileService.decryptFile(this.$store.state.currentFile)
+          .then((decryptedFileContent) => {
+            this.$store.dispatch('unsetFileIsSaving');
+            this.$store.dispatch('setCurrentFile', {
+              content: decryptedFileContent.content,
+              path: savedPath,
+              type: 'plain',
+            });
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+        } else {
+          this.$store.dispatch('setShowDecryptionModal', true);
+        }
       },
     },
   };
