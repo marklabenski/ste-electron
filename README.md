@@ -1,5 +1,7 @@
 # ste-electron
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/marklabenski/ste-electron.svg)](https://greenkeeper.io/)
+
 > An electron-vue project
 
 ## Build Setup
